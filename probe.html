@@ -1,0 +1,9 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Atlas MCP Apps Spec Probe</title></head><body><h1>Atlas MCP Apps Spec Probe</h1><p id="state">JavaScript starting</p><pre id="diagnostics"></pre><script>
+(()=>{
+const state={iframe:parent!==window,initialize_sent:false,initialize_received:false,initialized:false};
+const show=text=>{document.getElementById('state').textContent=text;document.getElementById('diagnostics').textContent=JSON.stringify(state,null,2);console.info('atlas_spec_probe',JSON.stringify(state));};
+addEventListener('message',event=>{if(event.source!==parent||event.data?.jsonrpc!=='2.0'||event.data.id!=='atlas-spec-init'||state.initialize_received)return;clearTimeout(timer);state.initialize_received=true;if(event.data.error){state.error=event.data.error;show('Initialization rejected');return;}state.hostInfo=event.data.result?.hostInfo??null;state.hostCapabilities=event.data.result?.hostCapabilities??null;parent.postMessage({jsonrpc:'2.0',method:'ui/notifications/initialized',params:{}},'*');state.initialized=true;show('MCP Apps initialization complete');});
+const timer=setTimeout(()=>{if(!state.initialize_received)show('No initialization response within 15 seconds');},15000);
+state.initialize_sent=true;show('Waiting for initialization');parent.postMessage({jsonrpc:'2.0',id:'atlas-spec-init',method:'ui/initialize',params:{protocolVersion:'2026-01-26',appInfo:{name:'Atlas MCP Apps Spec Probe',version:'2.0.0'},appCapabilities:{availableDisplayModes:['inline']}}},'*');
+})();
+</script></body></html>
