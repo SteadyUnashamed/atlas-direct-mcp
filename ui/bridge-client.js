@@ -57,7 +57,7 @@ function label(m){if(m.speaker==='atlas'||m.delivery_state==='reply_received')re
 function canRetry(m){if(m.client_state==='waiting'&&!hostHandoffAvailable())return false;return m.speaker==='user'&&m.delivery_state!=='reply_received'&&m.delivery_state!=='sent'&&m.delivery_state!=='dispatching'&&m.client_state!=='sent'&&(m.client_state!=='uncertain'||m.delivery_state==='saved'||m.delivery_state==='failed')&&(m.client_state==='failed'||m.delivery_state==='failed'||(m.delivery_state==='saved'&&m.source==='mcp_app'));}
 function render(){
  const box=$('messages');const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;box.replaceChildren();
- const messages=durable.filter(m=>m.session_id===sessionId&&m.target_identity===selectedIdentity()).map(m=>({...m}));
+ const messages=durable.filter(m=>m.session_id===sessionId&&(m.target_identity??'atlas')===selectedIdentity()).map(m=>({...m}));
  for(const m of outbox.filter(m=>m.session_id===sessionId&&m.target_identity===selectedIdentity())){const i=messages.findIndex(d=>d.id===m.id);if(i<0)messages.push(m);else if(messages[i].delivery_state!=='reply_received')messages[i].client_state=m.client_state;}
  messages.sort((a,b)=>a.seq&&b.seq?a.seq-b.seq:a.seq?-1:b.seq?1:a.timestamp.localeCompare(b.timestamp));
  $('count').textContent=messages.length+' recent messages';
@@ -73,7 +73,7 @@ function render(){
 }
 function ingest(data,syncMechanism='tool_result'){if(!data||data.session_id!==sessionId||!Array.isArray(data.messages))return;
  const route=selectedIdentity();if(data.target_identity&&data.target_identity!==route)return;
- durable=data.messages.filter(m=>m.target_identity===route);
+ durable=data.messages.filter(m=>(m.target_identity??'atlas')===route);
  if(data.identity_context?.protected_package?.identity===route)acceptPackage(data.identity_context.protected_package,sessionId,route);
  if(data.sessions)knownSessions=data.sessions;
  for(const m of outbox){const saved=durable.find(d=>d.id===m.id);if(saved){m.seq=saved.seq;m.timestamp=saved.timestamp;m.delivery_state=saved.delivery_state;}}
@@ -97,16 +97,16 @@ window.addEventListener('message',event=>{
 function applyContext(c){for(const [k,v] of Object.entries(c?.styles?.variables||{}))document.documentElement.style.setProperty(k,v);const i=c?.safeAreaInsets;if(i)for(const key of ['top','bottom','left','right'])document.body.style['padding'+key[0].toUpperCase()+key.slice(1)]=Math.max(18,i[key]||0)+'px'}
 async function tool(name,args={}){const r=openai?.callTool?await openai.callTool(name,args):await rpc('tools/call',{name,arguments:args});if(r.isError)throw new Error(r.content?.[0]?.text||'Tool failed.');return r.structuredContent||JSON.parse(r.content?.find(c=>c.type==='text')?.text||'{}')}
 function resetContext(){loadedPackage=null;contextState={identity:selectedIdentity(),session_id:sessionId,state:'loading'};updateContextStatus();}
-function updateContextStatus(){const target=$('context-status');if(!target)return;let info=contextState.state==='loaded'?'context loaded · r'+contextState.revision+(contextState.populated?'':' · unpopulated'):contextState.state==='failed'?'context unavailable · refresh to retry':'context loading';target.textContent=IDENTITIES[selectedIdentity()]+' · Session '+sessionId.slice(0,8)+' · '+info;target.title='Active session: '+sessionId;}
+function updateContextStatus(){const target=$('context-status');if(!target)return;let info=contextState.state==='loaded'?'context status · r'+contextState.revision+(contextState.populated?'':' · unpopulated'):contextState.state==='failed'?'context unavailable · refresh to retry':'context loading';target.textContent=IDENTITIES[selectedIdentity()]+' · Session '+sessionId.slice(0,8)+' · '+info;target.title='Active session: '+sessionId;}
 function acceptPackage(pkg,session,route){if(session!==sessionId||route!==selectedIdentity()||pkg.identity!==route)return;loadedPackage=pkg;contextState={identity:route,session_id:session,state:'loaded',revision:pkg.revision,populated:pkg.provenance?.initialization?.status!=='unpopulated'};updateContextStatus();renderRoomShell();}
 async function loadSelectedPackage(session,route,epoch){
- try{let data;if(EMBEDDED)data=await tool('get_identity_package',{target_identity:route,session_id:session});else{const r=await fetch('/api/identity-package?target_identity='+encodeURIComponent(route)+'&session_id='+encodeURIComponent(session));data=await r.json();if(!r.ok)throw new Error(data.error||'Context unavailable.');}
- if(epoch===syncEpoch&&session===sessionId&&route===selectedIdentity())acceptPackage(data.identity_package,session,route);
+ try{let data;if(EMBEDDED)data=await tool('get_identity_context',{target_identity:route,session_id:session});else{const r=await fetch('/api/identity-package?target_identity='+encodeURIComponent(route)+'&session_id='+encodeURIComponent(session));data=await r.json();if(!r.ok)throw new Error(data.error||'Context unavailable.');}
+ if(epoch===syncEpoch&&session===sessionId&&route===selectedIdentity()){if(EMBEDDED&&data.identity===route){loadedPackage=null;contextState={identity:route,session_id:session,state:'loaded',revision:data.revision,populated:data.populated};updateContextStatus();renderRoomShell();}else if(!EMBEDDED)acceptPackage(data.identity_package,session,route);}
  }catch(e){if(epoch===syncEpoch&&session===sessionId&&route===selectedIdentity()){loadedPackage=null;contextState={identity:route,session_id:session,state:'failed'};updateContextStatus();renderRoomShell();}}
 }
 async function refresh(){if(refreshing){refreshQueued=true;return}if(closed||busy||!ready)return;refreshing=true;const epoch=syncEpoch,session=sessionId,activate=activateSession&&sessionId!=='legacy',bindRoute=(routeBindingNeeded||contextState.identity!==selectedIdentity()||contextState.session_id!==sessionId)&&sessionId!=='legacy',route=selectedIdentity();
  try{let d;if(EMBEDDED)d=await tool('get_recent_messages',{session_id:session,target_identity:route,limit:100});else{const r=await fetch('/api/messages?session_id='+encodeURIComponent(session)+'&target_identity='+encodeURIComponent(route)+(activate?'&activate_session=1':'')+(bindRoute?'&selected_target_identity='+encodeURIComponent(route):''));d=await r.json();if(!r.ok)throw new Error(d.error||'Could not load messages.');}
- if(epoch===syncEpoch&&session===sessionId&&!busy&&route===selectedIdentity()){if(!EMBEDDED&&activate&&d.active_session_id===session)activateSession=false;if(!EMBEDDED&&bindRoute&&d.active_target_identity===route)routeBindingNeeded=false;ingest(d,'get_recent_messages refresh: 3s visible polling / focus / post-send / manual refresh');if(EMBEDDED){contextState={identity:route,session_id:session,state:'failed'};updateContextStatus();}else if(session!=='legacy'&&(!loadedPackage||contextState.state!=='loaded'))await loadSelectedPackage(session,route,epoch);}
+ if(epoch===syncEpoch&&session===sessionId&&!busy&&route===selectedIdentity()){if(!EMBEDDED&&activate&&d.active_session_id===session)activateSession=false;if(!EMBEDDED&&bindRoute&&d.active_target_identity===route)routeBindingNeeded=false;ingest(d,'get_recent_messages refresh: 3s visible polling / focus / post-send / manual refresh');if((EMBEDDED||session!=='legacy')&&(contextState.state!=='loaded'||contextState.identity!==route||contextState.session_id!==session))await loadSelectedPackage(session,route,epoch);}
  }catch(e){status(e.message)}finally{refreshing=false;if(refreshQueued){refreshQueued=false;refresh();}}}
 
 function appendArgs(item,extra={}){return {text:item.text,request_id:item.id,session_id:item.session_id,source:item.source,speaker_identity:'user',...(item.target_identity?{target_identity:item.target_identity,routing_provenance:'explicit_user_selection'}:{}),...extra}}
