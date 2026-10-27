@@ -9,7 +9,7 @@ import {PAGE} from './ui/room-page.js';
 
 export const RESOURCE='ui://atlas-bridge/proof-001/spec-probe-v2.html';
 const HTML=await readFile(new URL('./probe.html',import.meta.url),'utf8');
-const ROOM_URI='ui://atlas-bridge/proof-001/atlas-room-tool-render-v1';
+const ROOM_URI='ui://atlas-bridge/proof-001/atlas-room-tool-render-v2';
 const ASSET_ORIGIN='https://atlas-direct-mcp.onrender.com';
 const handler=createMcpHandler((ctx)=>{
  const server=new McpServer({name:'atlas-direct-mcp',version:'0.1.0'});
@@ -32,7 +32,7 @@ const handler=createMcpHandler((ctx)=>{
   try{
    await verifyDiagnosticToken(match?.[1]);
    if(!process.env.ATLAS_SITE_BYPASS)return {isError:true,content:[{type:'text',text:'Conversation service unavailable.'}]};
-   const response=await fetch('https://atlas-bridge-proof-001.palewasp2048.chatgpt.site/api/direct-mcp/messages',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+match[1],'OAI-Sites-Authorization':'Bearer '+process.env.ATLAS_SITE_BYPASS},body:JSON.stringify(args),signal:AbortSignal.timeout(10000)});
+   const response=await fetch('https://atlas-bridge-proof-001.palewasp2048.chatgpt.site/api/direct-mcp/messages',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+match[1],'OAI-Sites-Authorization':'Bearer '+process.env.ATLAS_SITE_BYPASS},body:JSON.stringify(args),redirect:'error',signal:AbortSignal.timeout(10000)});
    if(!response.ok)return {isError:true,content:[{type:'text',text:response.status===403?'Account is not authorized for conversation access.':'Conversation service unavailable.'}]};
    const data=await response.json();return {content:[{type:'text',text:JSON.stringify(data)}],structuredContent:data};
   }catch{return {isError:true,content:[{type:'text',text:'Conversation service unavailable.'}]};}
