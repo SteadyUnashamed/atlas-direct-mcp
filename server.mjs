@@ -9,7 +9,7 @@ import {PAGE} from './ui/room-page.js';
 
 export const RESOURCE='ui://atlas-bridge/proof-001/spec-probe-v2.html';
 const HTML=await readFile(new URL('./probe.html',import.meta.url),'utf8');
-const ROOM_URI='ui://atlas-bridge/proof-001/atlas-room-tool-render-v5';
+const ROOM_URI='ui://atlas-bridge/proof-001/atlas-room-tool-render-v2';
 const ASSET_ORIGIN='https://atlas-direct-mcp.onrender.com';
 const handler=createMcpHandler((ctx)=>{
  const server=new McpServer({name:'atlas-direct-mcp',version:'0.1.0'});
@@ -37,16 +37,6 @@ const handler=createMcpHandler((ctx)=>{
    const data=await response.json();return {content:[{type:'text',text:JSON.stringify(data)}],structuredContent:data};
   }catch{return {isError:true,content:[{type:'text',text:'Conversation service unavailable.'}]};}
  });
- server.registerTool('get_identity_context',{title:'Read Atlas identity context status',description:'Read only the selected identity context status for one owner-bound session; no identity traits or package contents.',inputSchema:z.object({session_id:z.string().trim().min(1).max(100),target_identity:z.enum(['atlas','steady','liminal','elias','gwen'])}).strict(),annotations:{readOnlyHint:true,idempotentHint:true,destructiveHint:false,openWorldHint:false},securitySchemes:[{type:'oauth2',scopes:[SCOPE]}],_meta:{securitySchemes:[{type:'oauth2',scopes:[SCOPE]}],ui:{visibility:['model','app']},'openai/widgetAccessible':true}},async(args)=>{
-  const match=/^Bearer ([^\s]+)$/i.exec(ctx.requestInfo?.headers?.get('Authorization')||'');
-  try{
-   await verifyDiagnosticToken(match?.[1]);
-   if(!process.env.ATLAS_SITE_BYPASS)return {isError:true,content:[{type:'text',text:'Identity status service unavailable.'}]};
-   const response=await fetch('https://atlas-bridge-proof-001.palewasp2048.chatgpt.site/api/direct-mcp/identity-status',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+match[1],'OAI-Sites-Authorization':'Bearer '+process.env.ATLAS_SITE_BYPASS},body:JSON.stringify(args),redirect:'error',signal:AbortSignal.timeout(10000)});
-   if(!response.ok)return {isError:true,content:[{type:'text',text:response.status===403?'Account is not authorized for identity status.':'Identity status unavailable for this session.'}]};
-   const data=await response.json();return {content:[{type:'text',text:JSON.stringify(data)}],structuredContent:data};
-  }catch{return {isError:true,content:[{type:'text',text:'Identity status service unavailable.'}]};}
- });
  return server;
 },{responseMode:'json'});
 
@@ -60,14 +50,14 @@ export async function handle(request){
  if(url.pathname!=='/mcp')return new Response('Atlas direct MCP — static probe only.',{status:url.pathname==='/'?200:404});
  // No bridge/data tools exist in phase 1. Never trust incoming identity headers.
  const rpc=request.method==='POST'?await request.clone().json().catch(()=>({})):{};
- if(rpc.method==='tools/call'&&['get_atlas_auth_status','get_recent_messages','get_identity_context'].includes(rpc.params?.name)){
+ if(rpc.method==='tools/call'&&['get_atlas_auth_status','get_recent_messages'].includes(rpc.params?.name)){
   const match=/^Bearer ([^\s]+)$/i.exec(request.headers.get('Authorization')||'');
   try{await verifyDiagnosticToken(match?.[1]);}catch{return challenge(rpc.id??null,request.headers.get('MCP-Protocol-Version')==='2026-07-28');}
  }
  let result=await handler.fetch(request);
  if(rpc.method==='tools/list'&&result.ok&&result.headers.get('content-type')?.includes('application/json')){
   const payload=await result.clone().json();
-  for(const tool of payload.result?.tools||[])if(['get_atlas_auth_status','get_recent_messages','get_identity_context'].includes(tool.name))tool.securitySchemes=[{type:'oauth2',scopes:[SCOPE]}];
+  for(const tool of payload.result?.tools||[])if(['get_atlas_auth_status','get_recent_messages'].includes(tool.name))tool.securitySchemes=[{type:'oauth2',scopes:[SCOPE]}];
   const headers=new Headers(result.headers);headers.delete('content-length');result=new Response(JSON.stringify(payload),{status:result.status,headers});
  }
  console.info(JSON.stringify({event:'atlas_direct_mcp',method:rpc.method??null,tool:rpc.params?.name??null,resource:rpc.params?.uri??null,http_status:result.status}));
