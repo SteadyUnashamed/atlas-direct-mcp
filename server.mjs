@@ -65,6 +65,15 @@ const handler=createMcpHandler((ctx)=>{
    const data=await response.json();return {content:[{type:'text',text:JSON.stringify(data)}],structuredContent:data};
   }catch{return {isError:true,content:[{type:'text',text:'Message append unavailable.'}]};}
  });
+ server.registerTool('append_atlas_test_message_once',{title:'Append one Atlas test message',description:'Temporary append-only validation for the single owner-authorized Atlas test request. No handoff, model call, reply, routing change, or package mutation.',inputSchema:z.object({}).strict(),annotations:{readOnlyHint:false,idempotentHint:true,destructiveHint:false,openWorldHint:false},securitySchemes:[{type:'oauth2',scopes:[WRITE_SCOPE]}],_meta:{securitySchemes:[{type:'oauth2',scopes:[WRITE_SCOPE]}],ui:{visibility:['model']}}},async()=>{
+  const match=/^Bearer ([^\s]+)$/i.exec(ctx.requestInfo?.headers?.get('Authorization')||'');
+  try{await verifyAppendToken(match?.[1]);if(!process.env.ATLAS_SITE_BYPASS)throw new Error('unavailable');
+   const args={text:'Hello, Atlas. This is a bridge test.',request_id:'fae3689a-c557-4cdc-b319-7ba2afcf8bd4',session_id:'22df27bc-2c90-4703-b326-d6bc8dc9a216',source:'mcp_app',target_identity:'atlas',speaker_identity:'user',routing_provenance:'explicit_user_selection'};
+   const response=await fetch('https://atlas-bridge-proof-001.palewasp2048.chatgpt.site/api/direct-mcp/append-user-message',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer '+match[1],'OAI-Sites-Authorization':'Bearer '+process.env.ATLAS_SITE_BYPASS},body:JSON.stringify(args),redirect:'error',signal:AbortSignal.timeout(10000)});
+   if(!response.ok)return {isError:true,content:[{type:'text',text:'Test append unavailable.'}]};
+   const data=await response.json();return {content:[{type:'text',text:JSON.stringify(data)}],structuredContent:data};
+  }catch{return {isError:true,content:[{type:'text',text:'Test append unavailable.'}]};}
+ });
  return server;
 },{responseMode:'json'});
 
@@ -78,7 +87,7 @@ export async function handle(request){
  if(url.pathname!=='/mcp')return new Response('Atlas direct MCP — static probe only.',{status:url.pathname==='/'?200:404});
  // No bridge/data tools exist in phase 1. Never trust incoming identity headers.
  const rpc=request.method==='POST'?await request.clone().json().catch(()=>({})):{};
- if(rpc.method==='tools/call'&&rpc.params?.name==='append_user_message'){
+ if(rpc.method==='tools/call'&&['append_user_message','append_atlas_test_message_once'].includes(rpc.params?.name)){
   const match=/^Bearer ([^\s]+)$/i.exec(request.headers.get('Authorization')||'');
   try{await verifyAppendToken(match?.[1]);}catch{return challenge(rpc.id??null,request.headers.get('MCP-Protocol-Version')==='2026-07-28');}
  }
@@ -90,7 +99,7 @@ export async function handle(request){
  if(rpc.method==='tools/list'&&result.ok&&result.headers.get('content-type')?.includes('application/json')){
   const payload=await result.clone().json();
   for(const tool of payload.result?.tools||[])if(['get_atlas_auth_status','get_recent_messages','get_identity_context','create_session_ownership'].includes(tool.name))tool.securitySchemes=[{type:'oauth2',scopes:[SCOPE]}];
-  for(const tool of payload.result?.tools||[])if(tool.name==='append_user_message')tool.securitySchemes=[{type:'oauth2',scopes:[WRITE_SCOPE]}];
+  for(const tool of payload.result?.tools||[])if(['append_user_message','append_atlas_test_message_once'].includes(tool.name))tool.securitySchemes=[{type:'oauth2',scopes:[WRITE_SCOPE]}];
   const headers=new Headers(result.headers);headers.delete('content-length');result=new Response(JSON.stringify(payload),{status:result.status,headers});
  }
  console.info(JSON.stringify({event:'atlas_direct_mcp',method:rpc.method??null,tool:rpc.params?.name??null,resource:rpc.params?.uri??null,http_status:result.status}));
