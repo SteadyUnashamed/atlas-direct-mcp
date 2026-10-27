@@ -28,10 +28,8 @@ export function challenge(id,modern=false){
  return new Response(JSON.stringify({jsonrpc:'2.0',id,result:{...(modern?{resultType:'complete'}:{}),isError:true,content:[{type:'text',text:'Authentication required.'}],_meta:{'mcp/www_authenticate':[header]}}}),{status:200,headers:{'Content-Type':'application/json','WWW-Authenticate':header,'Cache-Control':'no-store'}});
 }
 export function isolatedWriteChallenge(id,modern=false,error){
- const code=error?.code==='insufficient_scope'?'insufficient_scope':error?.code==='missing_token'?null:'invalid_token';
- const fields=[`Bearer resource_metadata="${METADATA}"`,`scope="${WRITE_SCOPE}"`];
- if(code)fields.push(`error="${code}"`);
- fields.push(`error_description="Atlas write authorization is required"`);
+ const code=error?.code==='insufficient_scope'?'insufficient_scope':'invalid_token';
+ const fields=[`Bearer resource_metadata="${METADATA}"`,`scope="${WRITE_SCOPE}"`,`error="${code}"`,`error_description="Atlas write authorization is required"`];
  const header=fields.join(', ');
  return new Response(JSON.stringify({jsonrpc:'2.0',id,result:{...(modern?{resultType:'complete'}:{}),isError:true,content:[{type:'text',text:'Atlas write authorization is required.'}],_meta:{'mcp/www_authenticate':[header]}}}),{status:200,headers:{'Content-Type':'application/json','WWW-Authenticate':header,'Cache-Control':'no-store'}});
 }
