@@ -1,11 +1,10 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {handle,RESOURCE} from './server.mjs';
-async function rpc(method,params={}){
+async function rpc(method,params={},expectedStatus=200){
  params={...params,_meta:{'io.modelcontextprotocol/protocolVersion':'2026-07-28','io.modelcontextprotocol/clientInfo':{name:'atlas-test',version:'1.0.0'},'io.modelcontextprotocol/clientCapabilities':{}}};
  const response=await handle(new Request('http://localhost/mcp',{method:'POST',headers:{'oai-authenticated-user-id':'spoofed-test-owner','Content-Type':'application/json',Accept:'application/json, text/event-stream','MCP-Protocol-Version':'2026-07-28','Mcp-Method':method,...(params.name||params.uri?{'Mcp-Name':params.name||params.uri}:{})},body:JSON.stringify({jsonrpc:'2.0',id:1,method,params})}));
- const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));return body;
-}
+const body=await response.json();assert.equal(response.status,expectedStatus,JSON.stringify(body));return body;
 test('anonymous discovery exposes only a static noauth probe',async()=>{
  const r=await rpc('tools/list');assert.equal(r.result.tools.length,8);
  const tool=r.result.tools.find(x=>x.name==='render_atlas_spec_probe');assert.equal(tool.name,'render_atlas_spec_probe');assert.deepEqual(tool._meta.securitySchemes,[{type:'noauth'}]);assert.equal(tool._meta.ui.resourceUri,RESOURCE);
@@ -57,7 +56,7 @@ test('append requires separate write scope and designated client',async()=>{
 
 test('one-request test tool requires write authorization and has no handoff path',async()=>{
  const list=await rpc('tools/list');const t=list.result.tools.find(x=>x.name==='append_atlas_test_message_once');assert.deepEqual(t.securitySchemes,[{type:'oauth2',scopes:['atlas:write']}]);assert.equal(t.annotations.idempotentHint,true);assert.deepEqual(t.inputSchema.properties,{});
- const r=await rpc('tools/call',{name:'append_atlas_test_message_once',arguments:{}});assert.equal(r.result.isError,true);assert.match(r.result._meta['mcp/www_authenticate'][0],/oauth-protected-resource/);
+ const r=await rpc('tools/call',{name:'append_atlas_test_message_once',arguments:{}},401);assert.equal(r.result.isError,true);assert.match(r.result._meta['mcp/www_authenticate'][0],/oauth-protected-resource/);
  const source=await (await import('node:fs/promises')).readFile(new URL('./server.mjs',import.meta.url),'utf8');const part=source.split("server.registerTool('append_atlas_test_message_once'")[1].split(' return server;')[0];
  for(const forbidden of ['sendFollowUpMessage','claim_handoff','record_atlas_reply','ui/message','identity-package'])assert.doesNotMatch(part,new RegExp(forbidden));
  assert.match(part,/api\/direct-mcp\/append-user-message/);assert.match(part,/fae3689a-c557-4cdc-b319-7ba2afcf8bd4/);
