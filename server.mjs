@@ -86,7 +86,16 @@ export async function handle(request,deps={}){
  if(url.pathname==='/health'&&request.method==='GET')return Response.json({status:'ok',phase:'static_probe_only'});
  if(url.pathname!=='/mcp')return new Response('Atlas direct MCP — static probe only.',{status:url.pathname==='/'?200:404});
  // No bridge/data tools exist in phase 1. Never trust incoming identity headers.
- const rpc=request.method==='POST'?await request.clone().json().catch(()=>({})):{};
+ console.info(JSON.stringify({
+ event:'atlas_direct_mcp_envelope',
+ http_method:request.method,
+ content_type:request.headers.get('content-type'),
+ content_length:request.headers.get('content-length'),
+ accept:request.headers.get('accept'),
+ mcp_protocol_version:request.headers.get('MCP-Protocol-Version'),
+ has_authorization:Boolean(request.headers.get('Authorization'))
+}));
+const rpc=request.method==='POST'?await request.clone().json().catch(()=>({})):{}; 
  if(rpc.method==='tools/call'&&rpc.params?.name==='append_atlas_test_message_once'){
   const match=/^Bearer ([^\s]+)$/i.exec(request.headers.get('Authorization')||'');
   try{if(!match){const err=new Error('Missing bearer token');err.code='missing_token';throw err;}await verifyAppendToken(match[1],deps.appendTestKeys);}catch(err){return isolatedWriteChallenge(rpc.id??null,request.headers.get('MCP-Protocol-Version')==='2026-07-28',err);}
