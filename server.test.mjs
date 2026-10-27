@@ -7,7 +7,7 @@ async function rpc(method,params={}){
  const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));return body;
 }
 test('anonymous discovery exposes only a static noauth probe',async()=>{
- const r=await rpc('tools/list');assert.equal(r.result.tools.length,6);
+ const r=await rpc('tools/list');assert.equal(r.result.tools.length,7);
  const tool=r.result.tools.find(x=>x.name==='render_atlas_spec_probe');assert.equal(tool.name,'render_atlas_spec_probe');assert.deepEqual(tool._meta.securitySchemes,[{type:'noauth'}]);assert.equal(tool._meta.ui.resourceUri,RESOURCE);
 });
 test('identity status tool is OAuth-protected and read-only',async()=>{const list=await rpc('tools/list');const t=list.result.tools.find(x=>x.name==='get_identity_context');assert.deepEqual(t.securitySchemes,[{type:'oauth2',scopes:['atlas:read']}]);assert.equal(t.annotations.readOnlyHint,true);const r=await rpc('tools/call',{name:'get_identity_context',arguments:{session_id:'test',target_identity:'atlas'}});assert.equal(r.result.isError,true);assert.match(r.result._meta['mcp/www_authenticate'][0],/oauth-protected-resource/)});
@@ -36,7 +36,7 @@ test('anonymous Room resource exposes only static assets and retains bridge code
 
 test('protected diagnostic challenges an anonymous request without exposing Atlas data',async()=>{
  const list=await rpc('tools/list');const tool=list.result.tools.find(t=>t.name==='get_atlas_auth_status');assert.deepEqual(tool.securitySchemes,[{type:'oauth2',scopes:['atlas:read']}]);const r=await rpc('tools/call',{name:'get_atlas_auth_status',arguments:{}});assert.equal(r.result.resultType,'complete');assert.equal(r.result.isError,true);assert.match(r.result._meta['mcp/www_authenticate'][0],/oauth-protected-resource/);assert.deepEqual(r.result.content,[{type:'text',text:'Authentication required.'}]);
- const meta=await handle(new Request('https://atlas-direct-mcp.onrender.com/.well-known/oauth-protected-resource'));assert.equal(meta.status,200);const b=await meta.json();assert.equal(b.resource,'https://atlas-direct-mcp.onrender.com');assert.deepEqual(b.scopes_supported,['atlas:read']);
+ const meta=await handle(new Request('https://atlas-direct-mcp.onrender.com/.well-known/oauth-protected-resource'));assert.equal(meta.status,200);const b=await meta.json();assert.equal(b.resource,'https://atlas-direct-mcp.onrender.com');assert.deepEqual(b.scopes_supported,['atlas:read','atlas:write']);
 });
 
 test('token verification enforces signature, issuer, audience, expiry and read scope',async()=>{
@@ -46,4 +46,11 @@ test('token verification enforces signature, issuer, audience, expiry and read s
  assert.deepEqual(await verifyDiagnosticToken(await sign(),keys),{authenticated:true});
  for(const bad of [{iss:'https://wrong.example/'},{aud:'https://wrong.example'},{exp:1},{scope:'other'}])await assert.rejects(verifyDiagnosticToken(await sign(bad),keys));
  const pair=await generateKeyPair('RS256');const forged=await new SignJWT({iss:ISSUER,aud:RESOURCE,sub:'test-subject',scope:'atlas:read',exp:Math.floor(Date.now()/1000)+300}).setProtectedHeader({alg:'RS256',kid:'test-key'}).sign(pair.privateKey);await assert.rejects(verifyDiagnosticToken(forged,keys));
+});
+
+test('append requires separate write scope and designated client',async()=>{
+ const list=await rpc('tools/list');const t=list.result.tools.find(x=>x.name==='append_user_message');assert.deepEqual(t.securitySchemes,[{type:'oauth2',scopes:['atlas:write']}]);assert.equal(t.annotations.idempotentHint,true);
+ const {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT}=await import('jose');const {verifyAppendToken,ISSUER,RESOURCE}=await import('./auth.mjs');const {publicKey,privateKey}=await generateKeyPair('RS256');const jwk=await exportJWK(publicKey);jwk.kid='key';const keys=createLocalJWKSet({keys:[jwk]});
+ async function sign(scope,azp){return new SignJWT({iss:ISSUER,aud:RESOURCE,sub:'user',scope,azp,exp:Math.floor(Date.now()/1000)+300}).setProtectedHeader({alg:'RS256',kid:'key'}).sign(privateKey)}
+ await verifyAppendToken(await sign('atlas:read atlas:write','UgCVpv7vqNdxej2v3d5xGdnihjrTnNSV'),keys);await assert.rejects(verifyAppendToken(await sign('atlas:read','UgCVpv7vqNdxej2v3d5xGdnihjrTnNSV'),keys));await assert.rejects(verifyAppendToken(await sign('atlas:write','other'),keys));
 });

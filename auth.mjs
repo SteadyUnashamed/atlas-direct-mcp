@@ -4,6 +4,7 @@ export const ISSUER='https://dev-lx2ta0smn81gpeib.us.auth0.com/';
 export const RESOURCE='https://atlas-direct-mcp.onrender.com';
 export const METADATA=RESOURCE+'/.well-known/oauth-protected-resource';
 export const SCOPE='atlas:read';
+export const WRITE_SCOPE='atlas:write';
 const remoteKeys=createRemoteJWKSet(new URL('.well-known/jwks.json',ISSUER));
 
 export async function verifyDiagnosticToken(token,keys=remoteKeys){
@@ -12,6 +13,12 @@ export async function verifyDiagnosticToken(token,keys=remoteKeys){
  if(typeof payload.sub!=='string'||!payload.sub.trim())throw new Error('Invalid token subject');
  const scopes=typeof payload.scope==='string'?payload.scope.split(/\s+/):[];
  if(!scopes.includes(SCOPE))throw new Error('Missing required scope');
+ return {authenticated:true};
+}
+export async function verifyAppendToken(token,keys=remoteKeys){
+ if(!token||typeof token!=='string')throw new Error('Missing bearer token');
+ const {payload}=await jwtVerify(token,keys,{issuer:ISSUER,audience:RESOURCE,algorithms:['RS256'],requiredClaims:['iss','aud','exp','sub','azp']});
+ if(typeof payload.sub!=='string'||!payload.sub.trim()||payload.azp!=='UgCVpv7vqNdxej2v3d5xGdnihjrTnNSV'||typeof payload.scope!=='string'||!payload.scope.split(/\s+/).includes(WRITE_SCOPE))throw new Error('Invalid authorization');
  return {authenticated:true};
 }
 

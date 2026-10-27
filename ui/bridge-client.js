@@ -136,6 +136,7 @@ async function deliver(item){
   traceHandoff(item,'append_succeeded',{append_succeeded:new Date().toISOString(),append_succeeded_at:new Date().toISOString(),stored_message_id:d.message.id,append_delivery_state:d.message.delivery_state,append_already_recorded:!!d.already_recorded,final_delivery_state:d.message.delivery_state});
   ingest(d);
   if($('text').value===item.text)$('text').value='';
+  if(EMBEDDED){item.client_state='waiting';item.phase='waiting';persist();status('Saved · handoff paused for verification.');return;}
   if(!hostHandoffAvailable()){traceHandoff(item,'host_capability_unavailable',{host_capability:handoffCapability(),ui_message_error:{kind:'capability_unavailable',message:handoffCapability().reason},final_delivery_state:d.message.delivery_state});item.client_state='waiting';item.phase='waiting';persist();status(waitingForHostReason());return}
   if(d.already_recorded&&['sent','dispatching','reply_received'].includes(d.message.delivery_state)){traceHandoff(item,'duplicate_handoff_suppressed',{suppression_reason:'Existing durable delivery state: '+d.message.delivery_state,request_already_claimed:true,another_host_turn_already_requested:d.message.delivery_state==='dispatching'?'unverified':true});item.client_state=d.message.delivery_state==='sent'?'sent':d.message.delivery_state==='reply_received'?'received':'uncertain';status(d.message.delivery_state==='reply_received'?'Reply received.':'This request already has a handoff; it will not be sent again.');return}
   item.phase='handoff';item.delivery_token=newUuid();persist();
