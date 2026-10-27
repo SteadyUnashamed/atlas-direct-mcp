@@ -9,7 +9,7 @@ import {PAGE} from './ui/room-page.js';
 
 export const RESOURCE='ui://atlas-bridge/proof-001/spec-probe-v2.html';
 const HTML=await readFile(new URL('./probe.html',import.meta.url),'utf8');
-const ROOM_URI='ui://atlas-bridge/proof-001/atlas-room-tool-render-v3';
+const ROOM_URI='ui://atlas-bridge/proof-001/atlas-room-tool-render-v4';
 const ASSET_ORIGIN='https://atlas-direct-mcp.onrender.com';
 const handler=createMcpHandler((ctx)=>{
  const server=new McpServer({name:'atlas-direct-mcp',version:'0.1.0'});
