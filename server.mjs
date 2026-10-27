@@ -4,7 +4,7 @@ import {pathToFileURL} from 'node:url';
 import {McpServer,createMcpHandler} from '@modelcontextprotocol/server';
 import {registerAppTool,registerAppResource,RESOURCE_MIME_TYPE} from '@modelcontextprotocol/ext-apps/server';
 import {z} from 'zod';
-import {ISSUER,RESOURCE as AUTH_RESOURCE,SCOPE,WRITE_SCOPE,verifyDiagnosticToken,verifyAppendToken,challenge} from './auth.mjs';
+import {ISSUER,RESOURCE as AUTH_RESOURCE,SCOPE,WRITE_SCOPE,verifyDiagnosticToken,verifyAppendToken,challenge,isolatedWriteChallenge} from './auth.mjs';
 import {PAGE} from './ui/room-page.js';
 
 export const RESOURCE='ui://atlas-bridge/proof-001/spec-probe-v2.html';
@@ -77,7 +77,7 @@ const handler=createMcpHandler((ctx)=>{
  return server;
 },{responseMode:'json'});
 
-export async function handle(request){
+export async function handle(request,deps={}){
  const url=new URL(request.url);
  if(request.method==='GET'&&url.pathname==='/.well-known/oauth-protected-resource')return Response.json({resource:AUTH_RESOURCE,authorization_servers:[ISSUER],scopes_supported:[SCOPE,WRITE_SCOPE]},{headers:{'Cache-Control':'public, max-age=300'}});
  if(request.method==='GET'&&/^\/assets\/[0-9a-f]{64}\.jpg$/.test(url.pathname)){
@@ -87,7 +87,11 @@ export async function handle(request){
  if(url.pathname!=='/mcp')return new Response('Atlas direct MCP — static probe only.',{status:url.pathname==='/'?200:404});
  // No bridge/data tools exist in phase 1. Never trust incoming identity headers.
  const rpc=request.method==='POST'?await request.clone().json().catch(()=>({})):{};
- if(rpc.method==='tools/call'&&['append_user_message','append_atlas_test_message_once'].includes(rpc.params?.name)){
+ if(rpc.method==='tools/call'&&rpc.params?.name==='append_atlas_test_message_once'){
+  const match=/^Bearer ([^\s]+)$/i.exec(request.headers.get('Authorization')||'');
+  try{if(!match){const err=new Error('Missing bearer token');err.code='missing_token';throw err;}await verifyAppendToken(match[1],deps.appendTestKeys);}catch(err){return isolatedWriteChallenge(rpc.id??null,request.headers.get('MCP-Protocol-Version')==='2026-07-28',err);}
+ }
+ if(rpc.method==='tools/call'&&rpc.params?.name==='append_user_message'){
   const match=/^Bearer ([^\s]+)$/i.exec(request.headers.get('Authorization')||'');
   try{await verifyAppendToken(match?.[1]);}catch{return challenge(rpc.id??null,request.headers.get('MCP-Protocol-Version')==='2026-07-28');}
  }

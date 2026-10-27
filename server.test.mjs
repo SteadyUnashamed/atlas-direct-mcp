@@ -62,3 +62,14 @@ test('one-request test tool requires write authorization and has no handoff path
  for(const forbidden of ['sendFollowUpMessage','claim_handoff','record_atlas_reply','ui/message','identity-package'])assert.doesNotMatch(part,new RegExp(forbidden));
  assert.match(part,/api\/direct-mcp\/append-user-message/);assert.match(part,/fae3689a-c557-4cdc-b319-7ba2afcf8bd4/);
 });
+
+test('isolated test challenges a valid read-only token with atlas:write without an append',async()=>{
+ const {generateKeyPair,exportJWK,createLocalJWKSet,SignJWT}=await import('jose');const {ISSUER,RESOURCE}=await import('./auth.mjs');
+ const {publicKey,privateKey}=await generateKeyPair('RS256');const jwk=await exportJWK(publicKey);jwk.kid='scope-test';const keys=createLocalJWKSet({keys:[jwk]});
+ const token=await new SignJWT({iss:ISSUER,aud:RESOURCE,sub:'subject',azp:'UgCVpv7vqNdxej2v3d5xGdnihjrTnNSV',scope:'atlas:read',exp:Math.floor(Date.now()/1000)+300}).setProtectedHeader({alg:'RS256',kid:'scope-test'}).sign(privateKey);
+ function request(token){return new Request('http://localhost/mcp',{method:'POST',headers:{'content-type':'application/json','MCP-Protocol-Version':'2026-07-28',...(token?{Authorization:'Bearer '+token}:{})},body:JSON.stringify({jsonrpc:'2.0',id:42,method:'tools/call',params:{name:'append_atlas_test_message_once',arguments:{}}})})}
+ const originalFetch=globalThis.fetch;let calls=0;globalThis.fetch=async()=>{calls++;throw new Error('Unexpected network access')};
+ try{const r=await handle(request(token),{appendTestKeys:keys});const body=await r.json();const challenge=body.result._meta['mcp/www_authenticate'][0];assert.equal(body.result.isError,true);assert.match(challenge,/error="insufficient_scope"/);assert.match(challenge,/scope="atlas:write"/);assert.match(challenge,/resource_metadata="https:\/\/atlas-direct-mcp\.onrender\.com\/\.well-known\/oauth-protected-resource"/);assert.match(challenge,/error_description=/);assert.equal(r.headers.get('WWW-Authenticate'),challenge);assert.equal(calls,0);
+ const missing=await handle(request(null),{appendTestKeys:keys});const m=await missing.json();assert.match(m.result._meta['mcp/www_authenticate'][0],/scope="atlas:write"/);assert.equal(calls,0);
+ }finally{globalThis.fetch=originalFetch}
+});
