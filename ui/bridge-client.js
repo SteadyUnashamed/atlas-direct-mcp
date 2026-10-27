@@ -57,7 +57,7 @@ function label(m){if(m.speaker==='atlas'||m.delivery_state==='reply_received')re
 function canRetry(m){if(m.client_state==='waiting'&&!hostHandoffAvailable())return false;return m.speaker==='user'&&m.delivery_state!=='reply_received'&&m.delivery_state!=='sent'&&m.delivery_state!=='dispatching'&&m.client_state!=='sent'&&(m.client_state!=='uncertain'||m.delivery_state==='saved'||m.delivery_state==='failed')&&(m.client_state==='failed'||m.delivery_state==='failed'||(m.delivery_state==='saved'&&m.source==='mcp_app'));}
 function render(){
  const box=$('messages');const atBottom=box.scrollHeight-box.scrollTop-box.clientHeight<60;box.replaceChildren();
- const messages=durable.filter(m=>m.session_id===sessionId&&m.target_identity===selectedIdentity()).map(m=>({...m}));
+ const messages=durable.filter(m=>m.session_id===sessionId&&(m.target_identity??'atlas')===selectedIdentity()).map(m=>({...m}));
  for(const m of outbox.filter(m=>m.session_id===sessionId&&m.target_identity===selectedIdentity())){const i=messages.findIndex(d=>d.id===m.id);if(i<0)messages.push(m);else if(messages[i].delivery_state!=='reply_received')messages[i].client_state=m.client_state;}
  messages.sort((a,b)=>a.seq&&b.seq?a.seq-b.seq:a.seq?-1:b.seq?1:a.timestamp.localeCompare(b.timestamp));
  $('count').textContent=messages.length+' recent messages';
@@ -73,7 +73,7 @@ function render(){
 }
 function ingest(data,syncMechanism='tool_result'){if(!data||data.session_id!==sessionId||!Array.isArray(data.messages))return;
  const route=selectedIdentity();if(data.target_identity&&data.target_identity!==route)return;
- durable=data.messages.filter(m=>m.target_identity===route);
+ durable=data.messages.filter(m=>(m.target_identity??'atlas')===route);
  if(data.identity_context?.protected_package?.identity===route)acceptPackage(data.identity_context.protected_package,sessionId,route);
  if(data.sessions)knownSessions=data.sessions;
  for(const m of outbox){const saved=durable.find(d=>d.id===m.id);if(saved){m.seq=saved.seq;m.timestamp=saved.timestamp;m.delivery_state=saved.delivery_state;}}
