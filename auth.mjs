@@ -31,5 +31,5 @@ export function isolatedWriteChallenge(id,modern=false,error){
  const code=error?.code==='insufficient_scope'?'insufficient_scope':'invalid_token';
  const fields=[`Bearer resource_metadata="${METADATA}"`,`scope="${WRITE_SCOPE}"`,`error="${code}"`,`error_description="Atlas write authorization is required"`];
  const header=fields.join(', ');
- return new Response(JSON.stringify({jsonrpc:'2.0',id,result:{...(modern?{resultType:'complete'}:{}),isError:true,content:[{type:'text',text:'Atlas write authorization is required.'}],_meta:{'mcp/www_authenticate':[header]}}}),{status:200,headers:{'Content-Type':'application/json','WWW-Authenticate':header,'Cache-Control':'no-store'}});
+ return new Response(JSON.stringify({jsonrpc:'2.0',id,result:{...(modern?{resultType:'complete'}:{}),isError:true,content:[{type:'text',text:'Atlas write authorization is required.'}],_meta:{'mcp/www_authenticate':[header]}}}),{status:code==='insufficient_scope'?403:401,headers:{'Content-Type':'application/json','WWW-Authenticate':header,'Cache-Control':'no-store'}});
 }
