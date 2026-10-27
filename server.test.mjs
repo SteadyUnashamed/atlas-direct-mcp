@@ -7,10 +7,11 @@ async function rpc(method,params={}){
  const body=await response.json();assert.equal(response.status,200,JSON.stringify(body));return body;
 }
 test('anonymous discovery exposes only a static noauth probe',async()=>{
- const r=await rpc('tools/list');assert.equal(r.result.tools.length,5);
+ const r=await rpc('tools/list');assert.equal(r.result.tools.length,6);
  const tool=r.result.tools.find(x=>x.name==='render_atlas_spec_probe');assert.equal(tool.name,'render_atlas_spec_probe');assert.deepEqual(tool._meta.securitySchemes,[{type:'noauth'}]);assert.equal(tool._meta.ui.resourceUri,RESOURCE);
 });
 test('identity status tool is OAuth-protected and read-only',async()=>{const list=await rpc('tools/list');const t=list.result.tools.find(x=>x.name==='get_identity_context');assert.deepEqual(t.securitySchemes,[{type:'oauth2',scopes:['atlas:read']}]);assert.equal(t.annotations.readOnlyHint,true);const r=await rpc('tools/call',{name:'get_identity_context',arguments:{session_id:'test',target_identity:'atlas'}});assert.equal(r.result.isError,true);assert.match(r.result._meta['mcp/www_authenticate'][0],/oauth-protected-resource/)});
+test('session ownership is an authenticated, idempotent, app-only operation',async()=>{const list=await rpc('tools/list');const t=list.result.tools.find(x=>x.name==='create_session_ownership');assert.deepEqual(t.securitySchemes,[{type:'oauth2',scopes:['atlas:read']}]);assert.equal(t.annotations.readOnlyHint,false);assert.equal(t.annotations.idempotentHint,true);assert.deepEqual(t._meta.ui.visibility,['app']);const r=await rpc('tools/call',{name:'create_session_ownership',arguments:{session_id:'12345678-1234-4234-8234-123456789abc'}});assert.equal(r.result.isError,true);assert.match(r.result._meta['mcp/www_authenticate'][0],/oauth-protected-resource/)});
 test('conversation reader is OAuth-protected and requires a session',async()=>{const list=await rpc('tools/list');const t=list.result.tools.find(x=>x.name==='get_recent_messages');assert.deepEqual(t.securitySchemes,[{type:'oauth2',scopes:['atlas:read']}]);assert.equal(t.annotations.readOnlyHint,true);assert.deepEqual(t.inputSchema.required,['session_id']);const r=await rpc('tools/call',{name:'get_recent_messages',arguments:{session_id:'test'}});assert.equal(r.result.isError,true);assert.match(r.result._meta['mcp/www_authenticate'][0],/oauth-protected-resource/);});
 test('static resource and tool result preserve the probe contract',async()=>{
  const r=await rpc('resources/read',{uri:RESOURCE});const c=r.result.contents[0];

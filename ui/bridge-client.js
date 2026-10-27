@@ -180,7 +180,8 @@ function switchSession(id,preserveSelectedIdentity){if(busy||typeof id!=='string
 function onIdentityChange(){const chosen=$('identity').value;if(!Object.hasOwn(IDENTITIES,chosen)){status('Choose a valid identity before sending.');return;}writeStorage(ROUTE_KEY+sessionId,chosen);routeBindingNeeded=true;syncEpoch++;durable=[];status('');resetContext();updateIdentityLabel();render();refresh();}
 $('identity').addEventListener('change',onIdentityChange);
 $('sessions').addEventListener('change',()=>switchSession($('sessions').value));
-$('new-session').addEventListener('click',()=>switchSession(newUuid()));
+let pendingNewSessionId=null;
+$('new-session').addEventListener('click',async()=>{if(!EMBEDDED){switchSession(newUuid());return}if(busy)return;busy=true;render();const id=pendingNewSessionId??=newUuid();try{const result=await tool('create_session_ownership',{session_id:id});if(result.session_id!==id||result.status!=='owned')throw new Error('Session ownership was not confirmed.');pendingNewSessionId=null;busy=false;switchSession(id);}catch(e){busy=false;status('Could not create a secure session. Please retry.');render();}});
 $('clear').addEventListener('click',()=>$('confirm').showModal());$('cancel').addEventListener('click',()=>$('confirm').close());
 $('delete').addEventListener('click',async()=>{if(busy)return;busy=true;syncEpoch++;$('delete').disabled=true;try{const d=await tool('clear_test_messages',{confirm:true,session_id:sessionId});outbox=[];persist();ingest(d);$('confirm').close();status('Conversation test messages cleared.')}catch(e){status(e.message)}finally{busy=false;$('delete').disabled=false;render();refresh()}});
 async function init(){render();if(!EMBEDDED){ready=true;$('connection').textContent='PRIVATE WEBSITE';updateIdentityLabel();$('send').disabled=false;status(hostHandoffAvailable()?'Private website connected. ChatGPT host messaging is available.':waitingForHostReason());await refresh();return}
