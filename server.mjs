@@ -99,7 +99,17 @@ export async function handle(request,deps={}){
   const match=/^Bearer ([^\s]+)$/i.exec(request.headers.get('Authorization')||'');
   try{await verifyDiagnosticToken(match?.[1]);}catch{return challenge(rpc.id??null,request.headers.get('MCP-Protocol-Version')==='2026-07-28');}
  }
- let result=await handler.fetch(request);
+ let dispatchRequest=request;
+if(
+ rpc.method==='tools/call' &&
+ rpc.params?.name==='append_atlas_test_message_once' &&
+ !/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')||'')
+){
+ const headers=new Headers(request.headers);
+ headers.set('Content-Type','application/json');
+ dispatchRequest=new Request(request,{headers});
+}
+let result=await handler.fetch(dispatchRequest);
  if(rpc.method==='tools/list'&&result.ok&&result.headers.get('content-type')?.includes('application/json')){
   const payload=await result.clone().json();
   for(const tool of payload.result?.tools||[])if(['get_atlas_auth_status','get_recent_messages','get_identity_context','create_session_ownership'].includes(tool.name))tool.securitySchemes=[{type:'oauth2',scopes:[SCOPE]}];
