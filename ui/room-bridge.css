@@ -1,0 +1,75 @@
+/* Presentation adapter only. The current bridge client and server remain unchanged. */
+[hidden]{display:none!important}
+button:disabled{opacity:.5;cursor:default}
+button:focus-visible,select:focus-visible{outline:2px solid var(--gold);outline-offset:3px}
+.room-signature{position:fixed;right:12px;bottom:8px;font-size:10px;opacity:.35;pointer-events:none;z-index:20}
+.sidebar-quote{font-family:Georgia,"Times New Roman",serif;color:#ac9780;font-size:.8rem;text-align:center;line-height:1.6}
+.top-actions{flex-wrap:wrap;justify-content:flex-end;max-width:55%;gap:10px 14px}
+.route-control{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.74rem;white-space:nowrap}
+.route-control select{font:inherit;background:rgba(9,9,15,.64);color:#efd3a4;border:1px solid var(--border);border-radius:10px;padding:8px 12px;min-width:90px}
+.compact-context{font-size:.68rem;color:var(--muted);max-width:360px;text-align:right}
+.chat-caption{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 20px 0;color:var(--muted);font-size:.68rem}
+.compact-delivery{color:#bdad95;font-size:.68rem;line-height:1.4;overflow-wrap:anywhere}
+.dm-delivery{padding:7px 20px 0}.dm-delivery:empty{display:none}
+.participant-chip[aria-pressed="true"]{border-color:var(--gold)!important;box-shadow:inset 0 0 0 1px #d5a55f44}
+.snapshot-card[aria-pressed="true"]{background:linear-gradient(135deg,rgba(80,57,34,.24),rgba(18,14,23,.8))}
+.message{flex-shrink:0}.message header{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.message header strong,.message header span{font-size:.68rem;font-weight:400;color:var(--muted)}
+.message .meta{font-size:.65rem;color:#998b99}.message.user .meta{text-align:right}
+.message-retry{justify-self:start;border:1px solid var(--border);background:transparent;border-radius:8px;color:var(--muted);font-size:.7rem;padding:4px 8px;cursor:pointer}
+.bubble{white-space:pre-wrap;overflow-wrap:anywhere}
+.diagnostics{padding:20px;border-top:1px solid var(--border)}.diagnostics h3{font-size:1rem;margin:0 0 16px}
+.diagnostic-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center;margin:12px 0}.diagnostic-actions select{max-width:240px;color:var(--text);font:inherit}
+.diagnostic-summary{display:flex;flex-wrap:wrap;gap:12px;color:var(--muted);font-size:.75rem}
+.diagnostics pre{white-space:pre-wrap;overflow-wrap:anywhere;padding:16px;border:1px solid var(--border);border-radius:12px;background:#08091090;font-size:.72rem;color:var(--muted)}
+.diagnostics details{margin:16px 0;color:var(--muted);font-size:.8rem}.diagnostics summary{cursor:pointer}
+#retry{display:none}.bridge-status:empty{display:none}
+dialog{background:var(--panel-2);color:var(--text);border:1px solid var(--border);border-radius:var(--radius);max-width:420px;padding:24px}dialog::backdrop{background:#0009}dialog .actions{display:flex;justify-content:flex-end;gap:10px}
+/* Keep desktop proportions and an anchored composer at shorter window heights. */
+@media(min-width:1121px){
+ .identity-chat-panel{height:calc(100dvh - 168px);min-height:500px;display:flex;flex-direction:column}
+ .identity-chat-panel .messages{height:auto;flex:1;min-height:0}
+ .identity-chat-panel .composer{flex-shrink:0}
+ .room-grid>.chat-panel{min-height:calc(100dvh - 168px);display:flex;flex-direction:column}
+ body[data-view="room"] .chat-panel .messages{height:auto;flex:1;min-height:220px}
+ .snapshot-panel{align-self:stretch}
+}
+@media(max-width:1120px){.snapshot-panel{order:initial}.identity-chat-layout{grid-template-columns:240px minmax(0,1fr)}.identity-chat-panel .messages{height:58vh;min-height:340px}.room-grid{grid-template-columns:1fr}.snapshot-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:760px){
+ .shell{display:block}.sidebar{position:relative;height:auto;padding:12px 14px;gap:10px}.brand{padding:0 0 10px}.primary-nav{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.nav-btn{font-size:.78rem;padding:10px 8px}.sidebar-footer{display:none}.workspace{padding:0 14px 24px}.topbar{min-height:106px;margin-bottom:16px;align-items:center;gap:8px}.topbar h2{font-size:1.3rem}.top-actions{display:flex;max-width:50%;gap:6px}.compact-context{font-size:.61rem;max-width:155px}.route-control{font-size:0}.route-control select{font-size:.72rem;min-width:0;padding:7px 9px}.identity-chat-layout{grid-template-columns:1fr;gap:12px}.view-identity-list{display:flex;overflow-x:auto;gap:8px;padding:10px}.view-identity-list .identity-btn{flex:0 0 auto;width:auto;flex-direction:column;gap:5px;padding:8px 12px}.view-identity-list .identity-meta span{display:none}.identity-chat-selector-panel .panel-header{padding:12px 16px}.identity-chat-selector-panel .panel-header p{font-size:.7rem}.identity-chat-panel .messages{height:45dvh;min-height:280px}.snapshot-list{grid-template-columns:1fr}.composer{padding:10px;gap:8px}.send-btn{padding:0 12px;font-size:.8rem}.message{max-width:94%}.message header{flex-wrap:wrap;gap:3px}.chat-caption{padding:8px 14px 0;flex-wrap:wrap;gap:3px}.tribe-chat-hero-content h3{font-size:1.4rem}.start-screen{overflow-y:auto;padding:22px 0}.start-screen-content{margin:auto;padding:26px 20px}.start-tagline{font-size:.9rem;margin-bottom:20px}.start-portraits{gap:17px;max-width:360px}.start-person .avatar-lg{width:64px;height:64px}.start-animals{font-size:.65rem;gap:6px}.start-footer{display:none}.room-signature{display:none}.profile-select-btn{min-width:130px;flex:1}.diagnostics{padding:16px}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;scroll-behavior:auto!important}}
+
+/* Light polish: scoped to the app shell; the landing screen is unchanged. */
+body[data-view="identity-chat"]::before,
+body[data-view="profiles"]::before,
+body[data-view="development"]::before{filter:blur(7px) brightness(.66) saturate(.98)}
+body[data-view="identity-chat"]::after,
+body[data-view="profiles"]::after,
+body[data-view="development"]::after{background:linear-gradient(180deg,rgba(7,6,9,.40),rgba(9,7,11,.55)),radial-gradient(circle at 76% 12%,rgba(88,64,112,.13),transparent 38%)}
+.shell .panel{background:linear-gradient(180deg,rgba(39,32,43,.88),rgba(29,24,33,.91));border-color:rgba(225,175,92,.26);box-shadow:0 18px 48px #0005,inset 0 1px 0 #ffe0b009}
+body[data-view="room"] .shell .panel{background:linear-gradient(180deg,rgba(29,31,44,.77),rgba(30,25,35,.83))}
+.shell .panel-header{background:linear-gradient(90deg,rgba(119,82,47,.12),rgba(57,45,66,.10))}
+.shell .identity-meta span,.shell .panel-header p,.shell .snapshot-card p{color:#c1b4be}
+.shell .compact-context,.shell .compact-delivery{color:#bdadba}
+.shell .nav-btn,.shell .identity-btn,.shell .profile-select-btn,.shell .profile-tab,.shell .chip,.shell .snapshot-card,.shell .secondary-btn,.shell .ghost-btn,.shell .send-btn,.shell .message-retry{transition:background .18s ease,border-color .18s ease,box-shadow .18s ease,color .18s ease,transform .18s ease}
+@media(hover:hover){
+ .shell :is(.nav-btn,.identity-btn,.profile-select-btn,.profile-tab,.chip,.snapshot-card,.secondary-btn,.ghost-btn,.message-retry):not(:disabled):hover{color:#ffe5b7;border-color:rgba(239,183,91,.58);background:linear-gradient(105deg,rgba(151,96,41,.23),rgba(100,73,89,.13));box-shadow:inset 0 1px 0 #ffe3af0d,0 0 17px #e3a44d0c}
+ .shell .nav-btn:not(:disabled):hover{box-shadow:inset 3px 0 0 #e6ae64aa,0 0 18px #c78d3410;transform:translateX(2px)}
+ .shell :is(.chip,.secondary-btn,.ghost-btn,.send-btn):not(:disabled):hover{transform:translateY(-1px)}
+ .shell .send-btn:not(:disabled):hover{background:linear-gradient(140deg,#d79b50,#a56a32);box-shadow:0 5px 22px #cd8d3f30,inset 0 1px 0 #ffe5b340;filter:none}
+}
+.shell :is(.nav-btn,.identity-btn,.profile-select-btn).active{color:#ffe5b6;border-color:rgba(232,179,92,.49);background:linear-gradient(95deg,rgba(155,100,43,.29),rgba(97,66,65,.14));box-shadow:inset 3px 0 0 #e8b35ccc,0 0 18px #d49a4310}
+.shell .profile-tab.active{color:#ffe0a2;background:rgba(202,145,65,.13);box-shadow:inset 0 -2px 0 #e8b35cbf}
+.shell .participant-chip[aria-pressed="true"]{color:#ffe3ad;background:rgba(134,88,35,.27);box-shadow:inset 0 0 0 1px #e8b35c55,0 0 12px #cd934315}
+.shell .snapshot-card[aria-pressed="true"]{border-color:rgba(232,179,92,.46);box-shadow:inset 3px 0 0 var(--identity-accent,#e8b35c),0 0 18px #cb934310}
+.shell :is(button,.file-btn):not(:disabled):active{transform:translateY(1px);filter:brightness(1.07)}
+/* Keep useful state available once, in the compact header and Development. */
+.topbar>div>.eyebrow,.identity-chat-selector-panel .panel-header p,
+.profile-selector-panel .panel-header p,#dmSubtitle,.profile-copy>.eyebrow,
+.profile-copy .tags,.space-overlay .eyebrow,.space-overlay p,
+.dev-card-head .eyebrow,#chatTitle{display:none}
+@media(prefers-reduced-motion:reduce){.shell *{transition:none!important;transform:none!important}}
+
+/* Readable presentation copy within the existing profile grid. */
+.presentation-profile p{margin:0;color:#c9bcc6;font-size:.81rem;line-height:1.7}

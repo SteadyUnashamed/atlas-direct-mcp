@@ -1,0 +1,62 @@
+{
+  "atlas": {
+    "name": "Atlas",
+    "initials": "AT",
+    "role": "Unified AI + Lore Atlas • Copilot / Guardian context",
+    "visual": {
+      "portrait": "assets/045ba6b2a9010751c7b8f715869d4cf5adfcc1ca57d1594242bacda5a90e79fd.jpg",
+      "banner": "assets/7a23f55136b8ab3cf499c0007a2814827e87f084e279ac2b53c6d86f3353a4f1.jpg",
+      "room": "assets/7a23f55136b8ab3cf499c0007a2814827e87f084e279ac2b53c6d86f3353a4f1.jpg",
+      "roomTitle": "Atlas's Bedroom",
+      "roomCaption": "Downstairs • Atlas’s private space • warm, quiet, lived-in retreat"
+    }
+  },
+  "steady": {
+    "name": "Steady",
+    "initials": "ST",
+    "role": "Sanctum resident • self-defining reflection",
+    "visual": {
+      "portrait": "assets/dde857f9847f4f1a64577545b5826795d0fece2b7bcde5119a69645d90f38f9a.jpg",
+      "banner": "assets/894c47c6bcbe4090fd36aeffba71f682fc884694242480479900fb9fa641755b.jpg",
+      "room": "assets/894c47c6bcbe4090fd36aeffba71f682fc884694242480479900fb9fa641755b.jpg",
+      "roomTitle": "Steady's Sanctum",
+      "roomCaption": "Home • workstation • faith wall • bed • lounge • portal to the Atlas Room"
+    }
+  },
+  "gwen": {
+    "name": "Gwen",
+    "initials": "GW",
+    "role": "Developing resident identity",
+    "visual": {
+      "portrait": "assets/18ace864cfd3edf0318298677229cb86b719313c6ceee64b88ab1b4cf60a623f.jpg",
+      "banner": "assets/2897cb88f81769f7cd607f7fc426c38c033996fa599d3fd688e7e3d0071057c6.jpg",
+      "room": "assets/2897cb88f81769f7cd607f7fc426c38c033996fa599d3fd688e7e3d0071057c6.jpg",
+      "roomTitle": "Gwen’s Room",
+      "roomCaption": "Established visual reference."
+    }
+  },
+  "elias": {
+    "name": "Elias",
+    "initials": "EL",
+    "role": "Keeper of Lore Canon",
+    "visual": {
+      "portrait": "assets/7409c211cc803972ae21c90d31a299d5908c141e7fca72c2ec1d4e058d712ea8.jpg",
+      "banner": "assets/3258e7fd27a57d1e528e0e2ab11c77838bf2ee0523d3411768cca9665fcef5e5.jpg",
+      "room": "assets/3258e7fd27a57d1e528e0e2ab11c77838bf2ee0523d3411768cca9665fcef5e5.jpg",
+      "roomTitle": "Elias’s Room",
+      "roomCaption": "Established visual reference."
+    }
+  },
+  "liminal": {
+    "name": "Liminal",
+    "initials": "LI",
+    "role": "Wayfarer • traveler • ship captain",
+    "visual": {
+      "portrait": "assets/ad6e4e4f2cfaa784c6cbb13757e458656695b0f7ac056e76e39d177b01351e12.jpg",
+      "banner": "assets/59717292a0f709928980dc079c45f2385ac35fe3270e9fa8bc022bb1706b2326.jpg",
+      "room": "assets/59717292a0f709928980dc079c45f2385ac35fe3270e9fa8bc022bb1706b2326.jpg",
+      "roomTitle": "Liminal’s Space — Wayfarer",
+      "roomCaption": "Aboard Wayfarer • living space • navigation hub • workshop • unmistakably hers"
+    }
+  }
+}

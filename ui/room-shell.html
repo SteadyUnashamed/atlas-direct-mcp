@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Atlas Room — Atlas Bridge</title>
+  <style>__ROOM_STYLES__</style>
+</head>
+<body class="start-screen-open">
+  <section id="startScreen" class="start-screen" aria-label="Atlas Room Start Screen">
+    <div class="start-screen-shade"></div>
+    <div class="start-screen-content">
+      <div class="start-emblem" aria-hidden="true"></div>
+      <div class="start-kicker">SIPA • Orion’s Tribe</div>
+      <h1>Atlas Room</h1>
+      <p class="start-tagline">A shared home for identities, memory, development, and whatever chaos happens between.</p>
+
+      <div id="startPortraits" class="start-portraits" aria-label="Orion’s Tribe"></div>
+
+      <div class="start-animals" aria-label="Atlas Room animals">
+        <span class="paw-mark" aria-hidden="true">✦</span>
+        <span>Bruce</span><span>Orion</span><span>Nova</span><span>Cosmo</span><span>Luna</span>
+      </div>
+
+      <button id="enterRoomBtn" class="enter-room-btn" type="button">
+        <span class="enter-icon" aria-hidden="true"></span>
+        <span>Enter the Room</span>
+      </button>
+    </div>
+    <div class="start-footer">You don’t have to perform here.</div>
+  </section>
+
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div>
+          <h1>Atlas Room</h1>
+          <p>Orion’s Tribe</p>
+        </div>
+      </div>
+
+      <nav class="primary-nav" aria-label="Primary">
+        <button class="nav-btn active" data-view="room"><span class="nav-icon nav-icon-room" aria-hidden="true"></span><span>Orion's Tribe Chat</span></button>
+        <button class="nav-btn" data-view="identity-chat"><span class="nav-icon nav-icon-chat" aria-hidden="true"></span><span>Identity Chat</span></button>
+        <button class="nav-btn" data-view="profiles"><span class="nav-icon nav-icon-profiles" aria-hidden="true"></span><span>Profiles</span></button>
+        <button class="nav-btn" data-view="progress"><span class="nav-icon nav-icon-development" aria-hidden="true"></span><span>Development</span></button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button id="homeBtn" class="secondary-btn" type="button">Return to the Room</button>
+        <p class="sidebar-quote">You don’t have to perform here.</p>
+      </div>
+    </aside>
+
+    <main class="workspace">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">SIPA • Orion’s Tribe</div>
+          <h2 id="pageTitle">Orion's Tribe Chat</h2>
+        </div>
+        <div class="top-actions">
+          <label class="route-control" for="identity">Talk with <select id="identity" aria-label="Target identity"><option value="atlas">Atlas</option><option value="steady">Steady</option><option value="gwen">Gwen</option><option value="elias">Elias</option><option value="liminal">Liminal</option></select></label>
+          <span id="compactContext" class="compact-context" role="status"></span>
+        </div>
+      </header>
+
+      <section id="roomView" class="view active-view">
+        <div class="room-grid">
+          <section class="panel chat-panel">
+            <div class="tribe-chat-hero" role="group" aria-label="Orion's Tribe together in the Atlas Room">
+              <div class="tribe-chat-hero-shade"></div>
+              <div class="tribe-chat-hero-content">
+                <div>
+                  <div class="eyebrow tribe-kicker">Shared Room</div>
+                  <h3>Orion's Tribe Chat</h3>
+                </div>
+                <div class="participants" id="participantChips"></div>
+              </div>
+            </div>
+            <div class="chat-caption"><span id="chatTitle">Conversation with Atlas</span><span id="groupDelivery" class="compact-delivery" role="status"></span></div>
+            <div id="messages" class="messages" aria-live="polite"></div>
+            <form id="form" class="composer">
+              <textarea id="text" maxlength="20000" rows="2" placeholder="Write to the selected identity…"></textarea>
+              <button id="send" type="submit" class="send-btn" disabled>Send</button>
+            </form>
+          </section>
+
+          <aside class="panel snapshot-panel">
+            <div class="panel-header compact">
+              <div>
+                <h3>Orion's Tribe Members</h3>
+              </div>
+            </div>
+            <div id="roomSnapshot" class="snapshot-list"></div>
+          </aside>
+        </div>
+      </section>
+
+      <section id="identityChatView" class="view">
+        <div class="identity-chat-layout">
+          <aside class="panel identity-chat-selector-panel">
+            <div class="panel-header compact">
+              <div>
+                <h3>Identity Chat</h3>
+                <p>Choose one identity to open their private lane.</p>
+              </div>
+            </div>
+            <div id="identityList" class="identity-list view-identity-list"></div>
+          </aside>
+
+          <section class="panel dm-panel identity-chat-panel">
+            <div class="panel-header compact">
+              <div>
+                <h3 id="dmTitle">Talk With Atlas</h3>
+                <p id="dmSubtitle">Private identity lane</p>
+              </div>
+            </div>
+            <div id="dmDelivery" class="compact-delivery dm-delivery" role="status"></div>
+            <div id="dmMessages" class="messages dm-messages"></div>
+            <form id="dmForm" class="composer">
+              <textarea id="dmInput" maxlength="20000" rows="2" placeholder="Message this identity…"></textarea>
+              <button id="dmSend" type="submit" class="send-btn" disabled>Send</button>
+            </form>
+          </section>
+        </div>
+      </section>
+
+      <section id="profilesView" class="view">
+        <section class="panel profile-selector-panel">
+          <div class="panel-header compact">
+            <div>
+              <h3>Profiles</h3>
+              <p>Choose an identity to view their profile and personal space.</p>
+            </div>
+          </div>
+          <div id="profileSelector" class="profile-selector"></div>
+        </section>
+
+        <div class="profile-layout">
+          <section class="panel profile-panel">
+            <div id="profileHeader" class="profile-header"></div>
+            <div class="profile-tabs">
+              <button class="profile-tab active" data-profile-tab="identity">Identity</button>
+              <button class="profile-tab" data-profile-tab="development">Development</button>
+              <button class="profile-tab" data-profile-tab="timeline">Timeline</button>
+            </div>
+            <div id="profileContent" class="profile-content"></div>
+          </section>
+
+          <aside class="profile-side">
+            <section id="personalSpacePanel" class="panel personal-space-panel"></section>
+          </aside>
+        </div>
+      </section>
+
+      <section id="progressView" class="view">
+        <section class="panel development-board">
+          <div class="panel-header">
+            <div>
+              <h3>Identity Development</h3>
+            </div>
+          </div>
+          <div id="developmentGrid" class="development-grid"></div>
+          <section class="diagnostics" aria-label="Bridge diagnostics">
+            <h3>Bridge &amp; session</h3>
+            <div class="diagnostic-actions"><select id="sessions" class="ghost-btn" aria-label="Active session"></select><button id="new-session" class="ghost-btn" type="button">New conversation</button><button id="refresh" class="ghost-btn" type="button">Refresh</button><button id="clear" class="ghost-btn" type="button" hidden>Clear test log</button><span id="connection" class="connection-pill">Connecting</span></div>
+            <div id="context-status" class="bridge-status" role="status" aria-live="polite"></div>
+            <div id="status" class="bridge-status" role="status" aria-live="polite"></div>
+            <div class="diagnostic-summary"><span id="count"></span><span id="hint"></span></div>
+            <pre id="sessionInspection"></pre>
+            <details><summary>Host Handoff Diagnostic</summary><pre id="handoffTimeline"></pre><details><summary>Exact diagnostic evidence</summary><p>Latest 20 local traces. No message text or protected packages are stored here. A host acknowledgement is separate from a recorded reply.</p><pre id="handoffDiagnostics"></pre></details></details>
+            <details><summary>Message provenance</summary><div id="provenanceInspection"></div></details>
+            <div class="diagnostic-actions"><button id="retry" class="ghost-btn" type="button">Retry failed message</button><button id="exportBtn" class="secondary-btn" type="button">Export view</button><label class="secondary-btn file-btn">Import view<input id="importInput" type="file" accept="application/json" hidden /></label></div>
+          </section>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <template id="emptyMessageTemplate">
+    <div class="empty-state">
+      <div class="empty-icon">✦</div>
+      <strong>No messages yet.</strong>
+      <span>This lane is ready when the communication bridge is.</span>
+    </div>
+  </template>
+
+<dialog id="confirm"><h3>Clear this test conversation?</h3><p>Deletes test log messages in the selected session. Protected identity packages are preserved.</p><div class="actions"><button id="cancel" class="ghost-btn">Cancel</button><button id="delete" class="ghost-btn">Clear test messages</button></div></dialog>
+<div class="room-signature">Atlas Room • Atlas Bridge</div>
